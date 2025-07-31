@@ -1,0 +1,6 @@
+openai
+whisper
+yt-dlp
+ffmpeg-python
+google-auth
+google-api-python-client
