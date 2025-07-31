@@ -4,3 +4,7 @@ yt-dlp
 ffmpeg-python
 google-auth
 google-api-python-client
+torch
+pyannote-audio
+pyannote.core
+pyannote.pipeline
