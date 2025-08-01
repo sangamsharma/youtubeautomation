@@ -2,6 +2,11 @@ import sys
 import yt_dlp
 import os
 
+if len(sys.argv) < 2:
+    print("Usage: python download.py <youtube_url>")
+    sys.exit(1)
+
+youtube_url = sys.argv[1]
 def download_video(url, output_dir="videos"):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
