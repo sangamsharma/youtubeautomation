@@ -8,3 +8,4 @@ torch
 pyannote-audio
 pyannote.core
 pyannote.pipeline
+transformers
