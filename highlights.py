@@ -1,4 +1,5 @@
 # highlights.py - updated with pyannote speaker diarization
+token = os.getenv("HUGGINGFACE_TOKEN")
 highlight_code = """
 import os
 from pyannote.audio import Pipeline
@@ -24,7 +25,7 @@ def extract_highlights(video_path, diarization_result, output_dir):
         print(f"Exported: {filename}")
 
 if __name__ == "__main__":
-    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=token)
     diarization = pipeline(VIDEO_PATH)
     extract_highlights(VIDEO_PATH, diarization, OUTPUT_DIR)
 """
