@@ -1,21 +1,30 @@
-```python
-import openai
-openai.api_key = "YOUR_OPENAI_API_KEY"
+# highlights.py - updated with pyannote speaker diarization
+highlight_code = """
+import os
+from pyannote.audio import Pipeline
+from moviepy.editor import VideoFileClip
 
-def extract_clips(transcript):
-    prompt = f"""
-    You're a YouTube content editor.
-    Extract 3 interesting moments (less than 60s) from the transcript below.
-    Return a list of JSON with `start`, `end`, and `description`.
+# Configuration
+VIDEO_PATH = "videos/input_video.mp4"
+OUTPUT_DIR = "videos/clips"
+MIN_DURATION = 3  # seconds
 
-    Transcript:
-    {transcript}
-    """
-    res = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return res.choices[0].message['content']
-```
+def extract_highlights(video_path, diarization_result, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    clip = VideoFileClip(video_path)
+    speaker_idx = 0
+    for turn, _, speaker in diarization_result.itertracks(yield_label=True):
+        start, end = turn.start, turn.end
+        duration = end - start
+        if duration < MIN_DURATION:
+            continue
+        speaker_idx += 1
+        filename = f"{output_dir}/speaker_{speaker_idx}_{speaker}_{int(start)}s_{int(end)}s.mp4"
+        clip.subclip(start, end).write_videofile(filename, codec="libx264")
+        print(f"Exported: {filename}")
 
----
+if __name__ == "__main__":
+    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+    diarization = pipeline(VIDEO_PATH)
+    extract_highlights(VIDEO_PATH, diarization, OUTPUT_DIR)
+"""
