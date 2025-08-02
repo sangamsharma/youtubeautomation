@@ -1,31 +1,24 @@
-# highlights.py - updated with pyannote speaker diarization
-token = os.getenv("HUGGINGFACE_TOKEN")
-highlight_code = """
-import os
-from pyannote.audio import Pipeline
-from moviepy.editor import VideoFileClip
+# highlights.py
+import openai
+from flask import jsonify, request
 
-# Configuration
-VIDEO_PATH = "videos/input_video.mp4"
-OUTPUT_DIR = "videos/clips"
-MIN_DURATION = 3  # seconds
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
-def extract_highlights(video_path, diarization_result, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    clip = VideoFileClip(video_path)
-    speaker_idx = 0
-    for turn, _, speaker in diarization_result.itertracks(yield_label=True):
-        start, end = turn.start, turn.end
-        duration = end - start
-        if duration < MIN_DURATION:
-            continue
-        speaker_idx += 1
-        filename = f"{output_dir}/speaker_{speaker_idx}_{speaker}_{int(start)}s_{int(end)}s.mp4"
-        clip.subclip(start, end).write_videofile(filename, codec="libx264")
-        print(f"Exported: {filename}")
+def extract_highlights(request):
+    data = request.get_json()
+    transcript_file = data.get("transcript_file")
+    if not transcript_file:
+        return jsonify({"error": "No transcript path"}), 400
 
-if __name__ == "__main__":
-pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=token)
-    diarization = pipeline(VIDEO_PATH)
-    extract_highlights(VIDEO_PATH, diarization, OUTPUT_DIR)
-"""
+    with open(transcript_file) as f:
+        transcript = f.read()
+
+    prompt = f"Extract best moment timestamps from this transcript under 60s: {transcript}"
+
+    resp = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    clip_info = resp.choices[0].message["content"]
+
+    return jsonify({"message": "Highlights extracted", "clips": clip_info})
