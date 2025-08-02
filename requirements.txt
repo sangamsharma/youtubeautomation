@@ -1,6 +1,6 @@
 openai
 uvicorn
-whisper
+openai-whisper
 yt-dlp
 ffmpeg-python
 google-auth
