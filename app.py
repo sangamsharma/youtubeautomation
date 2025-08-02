@@ -1,31 +1,31 @@
-from fastapi import FastAPI, Request
-import subprocess
-import os
+from flask import Flask, request, jsonify
+from download import download_video
+from transcribe import transcribe_audio
+from highlights import extract_highlights
+from clipper import clip_video
+from upload import upload_short
 
-app = FastAPI()
+app = Flask(__name__)
 
-@app.post("/trigger-download")
-async def trigger_download(request: Request):
-    try:
-        body = await request.json()
-        url = body.get("url")
-        if not url:
-            return {"error": "No URL provided"}, 400
+@app.route('/download', methods=['POST'])
+def handle_download():
+    return download_video(request)
 
-        result = subprocess.run(
-            ["python3", "backend/download.py", url],
-            capture_output=True,
-            text=True,
-            check=False,
-            cwd=os.path.dirname(os.path.abspath(__file__))
-        )
-        if result.returncode != 0:
-            return {"error": "Download failed", "details": result.stderr}, 500
+@app.route('/transcribe', methods=['POST'])
+def handle_transcribe():
+    return transcribe_audio(request)
 
-        filename = result.stdout.strip().split("Downloaded: ")[1] if "Downloaded:" in result.stdout else None
-        if not filename:
-            return {"error": "No filename returned", "output": result.stdout}, 500
+@app.route('/highlights', methods=['POST'])
+def handle_highlights():
+    return extract_highlights(request)
 
-        return {"status": "success", "filename": filename}
-    except Exception as e:
-        return {"error": str(e)}, 500
+@app.route('/clip', methods=['POST'])
+def handle_clip():
+    return clip_video(request)
+
+@app.route('/upload', methods=['POST'])
+def handle_upload():
+    return upload_short(request)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
