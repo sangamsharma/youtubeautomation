@@ -11,3 +11,5 @@ pyannote.core
 pyannote.pipeline
 transformers
 fastapi
+Flask
+pytube
