@@ -1,37 +1,16 @@
-import sys
-import yt_dlp
-import os
+# download.py
+from flask import jsonify
+from pytube import YouTube
 
-if len(sys.argv) < 2:
-    print("Usage: python download.py <youtube_url>")
-    sys.exit(1)
+def download_video(request):
+    data = request.get_json()
+    url = data.get("url")
+    if not url:
+        return jsonify({"error": "No URL provided"}), 400
 
-youtube_url = sys.argv[1]
-def download_video(url, output_dir="videos"):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    yt = YouTube(url)
+    stream = yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
+    out_path = "input.mp4"
+    stream.download(filename=out_path)
 
-    ydl_opts = {
-        'outtmpl': os.path.join(output_dir, '%(title)s.%(ext)s'),
-        'format': 'mp4',
-        'postprocessors': [{
-            'key': 'FFmpegVideoConvertor',
-            'preferedformat': 'mp4',
-        }],
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info)
-        if not filename.endswith('.mp4'):
-            filename = os.path.splitext(filename)[0] + '.mp4'
-        print(f"Downloaded: {filename}")
-        return filename
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python download.py <youtube_url>")
-        sys.exit(1)
-
-    url = sys.argv[1]
-    download_video(url)
+    return jsonify({"message": "Downloaded", "filename": out_path})
